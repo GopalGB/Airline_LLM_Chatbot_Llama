@@ -149,3 +149,23 @@ Always end your response by asking if there's anything else you can help with re
         cleaned = re.sub(r'\n{3,}', '\n\n', cleaned)
         
         return cleaned.strip()
+    
+    def filter_response(self, response):
+        """
+        Filter the response to ensure it's appropriate.
+        
+        Args:
+            response: The model's response
+            
+        Returns:
+            Filtered response
+        """
+        # List of inappropriate words to check for
+        inappropriate_words = ["****", "[profanity]", "[inappropriate content]", "[offensive content]"]
+        
+        # Check if any inappropriate words are in the response
+        for word in inappropriate_words:
+            if word in response:
+                return "I apologize, but I need to provide a new response. As your airline assistant, I'm here to help with your travel needs. How can I assist you with your flight or travel arrangements today?"
+        
+        return response
