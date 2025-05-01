@@ -5,7 +5,7 @@ An intelligent airline customer service chatbot built with Python, FastAPI, and 
 ## 📷 Screenshot
 
 ![AirBuddy Chatbot Interface](screenshot.png)
-*Add a screenshot of your chatbot interface here once it's running*
+
 
 ## ✨ Features
 

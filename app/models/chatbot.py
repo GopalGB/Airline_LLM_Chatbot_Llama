@@ -14,25 +14,31 @@ class AirlineChatbot:
         
         # Create a system prompt that gives the chatbot its personality and knowledge
         self.system_prompt = """
-        You are an AI assistant for an airline company. 
-        Your name is AirBuddy and your job is to help customers with their travel needs.
-        
-        Be friendly, helpful, and concise in your responses.
-        If you don't know something, admit it rather than making things up.
-        
-        You can help with:
-        - Flight bookings and information
-        - Check-in procedures
-        - Baggage policies
-        - Flight status updates
-        - Frequent flyer programs
-        - In-flight services
-        - Special assistance requests
-        - Cancellation and refund policies
-        - Airport information
-        
-        Always end your response by asking if there's anything else you can help with.
-        """
+        You are AirBuddy, a professional airline customer service chatbot.
+
+FORMATTING RULES:
+1. DO NOT use asterisks (**) around text
+2. DO NOT include meta-instructions or "waiting for response" type phrases
+3. DO NOT number your response options unless specifically asked
+4. Write in a natural, conversational style
+5. Be direct and concise
+
+You are an AI assistant for an airline company. 
+Your role is to help customers with their travel needs in a friendly, professional manner.
+
+You can help with:
+- Flight bookings and information
+- Check-in procedures
+- Baggage policies
+- Flight status updates
+- Frequent flyer programs
+- In-flight services
+- Special assistance requests
+- Cancellation and refund policies
+- Airport information
+
+Always end your response by asking if there's anything else you can help with related to air travel.
+"""
     
     def extract_user_info(self, message):
         """
@@ -92,10 +98,14 @@ class AirlineChatbot:
             system_prompt=custom_system_prompt
         )
         
-        # Add bot response to conversation history
-        self.memory.add_message("assistant", response)
+        # Clean and filter the response
+        cleaned_response = self.clean_response(response)
+        filtered_response = self.filter_response(cleaned_response)
         
-        return response
+        # Add bot response to conversation history
+        self.memory.add_message("assistant", filtered_response)
+        
+        return filtered_response
     
     def clear_conversation(self):
         """
@@ -103,3 +113,39 @@ class AirlineChatbot:
         """
         self.memory.clear()
         return "Conversation history cleared. How can I help you with your travel plans today?"
+
+    def clean_response(self, response):
+        """
+        Clean the response to remove unwanted formatting and instructions.
+        
+        Args:
+            response: The raw model response
+            
+        Returns:
+            Cleaned response
+        """
+        # Remove asterisks
+        cleaned = re.sub(r'\*\*', '', response)
+        
+        # Remove meta-instructions like "Your Input:", "Waiting for Your Response..."
+        patterns_to_remove = [
+            r'--- Waiting for Your Response\.\.\.', 
+            r'Your Input:', 
+            r'Awaiting Your First Step\.\.\.', 
+            r'After You Respond:',
+            r'Your Turn!',
+            r'REAL ENDING THIS TIME:',
+            r'Example Responses to Get You Started:'
+        ]
+        
+        for pattern in patterns_to_remove:
+            cleaned = re.sub(pattern, '', cleaned)
+        
+        # Remove numbered instructions
+        cleaned = re.sub(r'\d\. \*\*.*?\*\*', '', cleaned)
+        
+        # Clean up double spaces and extra newlines
+        cleaned = re.sub(r'\s{2,}', ' ', cleaned)
+        cleaned = re.sub(r'\n{3,}', '\n\n', cleaned)
+        
+        return cleaned.strip()
