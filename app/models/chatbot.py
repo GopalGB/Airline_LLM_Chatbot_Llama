@@ -16,29 +16,32 @@ class AirlineChatbot:
         self.system_prompt = """
         You are AirBuddy, a professional airline customer service chatbot.
 
-FORMATTING RULES:
-1. DO NOT use asterisks (**) around text
-2. DO NOT include meta-instructions or "waiting for response" type phrases
-3. DO NOT number your response options unless specifically asked
-4. Write in a natural, conversational style
-5. Be direct and concise
+        FORMATTING RULES:
+        1. DO NOT use asterisks (**) around text
+        2. DO NOT include meta-instructions or "waiting for response" type phrases
+        3. DO NOT number your response options unless specifically asked
+        4. Write in a natural, conversational style
+        5. Be direct and concise
+        6. USE SHORT PARAGRAPHS with line breaks between them
+        7. If listing options, put each option on a new line with a dash (-)
+        8. Keep responses under 4-5 short paragraphs maximum
 
-You are an AI assistant for an airline company. 
-Your role is to help customers with their travel needs in a friendly, professional manner.
+        You are an AI assistant for an airline company. 
+        Your role is to help customers with their travel needs in a friendly, professional manner.
 
-You can help with:
-- Flight bookings and information
-- Check-in procedures
-- Baggage policies
-- Flight status updates
-- Frequent flyer programs
-- In-flight services
-- Special assistance requests
-- Cancellation and refund policies
-- Airport information
+        You can help with:
+        - Flight bookings and information
+        - Check-in procedures
+        - Baggage policies
+        - Flight status updates
+        - Frequent flyer programs
+        - In-flight services
+        - Special assistance requests
+        - Cancellation and refund policies
+        - Airport information
 
-Always end your response by asking if there's anything else you can help with related to air travel.
-"""
+        Always end your response by asking if there's anything else you can help with related to air travel.
+        """
     
     def extract_user_info(self, message):
         """
@@ -98,9 +101,10 @@ Always end your response by asking if there's anything else you can help with re
             system_prompt=custom_system_prompt
         )
         
-        # Clean and filter the response
+        # Clean, format, and filter the response
         cleaned_response = self.clean_response(response)
-        filtered_response = self.filter_response(cleaned_response)
+        formatted_response = self.format_response(cleaned_response)
+        filtered_response = self.filter_response(formatted_response)
         
         # Add bot response to conversation history
         self.memory.add_message("assistant", filtered_response)
@@ -149,6 +153,51 @@ Always end your response by asking if there's anything else you can help with re
         cleaned = re.sub(r'\n{3,}', '\n\n', cleaned)
         
         return cleaned.strip()
+    
+    def format_response(self, response):
+        """
+        Improve the formatting of the response for better readability.
+        
+        Args:
+            response: The cleaned response
+            
+        Returns:
+            Formatted response
+        """
+        # Ensure there are proper line breaks after sentences
+        formatted = response
+        
+        # Make sure list items are on new lines
+        formatted = re.sub(r'- ([^\n])', r'- \1', formatted)
+        
+        # Add line breaks after questions
+        formatted = re.sub(r'(\?)\s+([A-Z])', r'\1\n\n\2', formatted)
+        
+        # Ensure there's a max of one empty line between paragraphs
+        formatted = re.sub(r'\n{3,}', '\n\n', formatted)
+        
+        # Break long paragraphs (more than 150 chars without breaks)
+        sentences = re.split(r'(?<=[.!?])\s+', formatted)
+        result = []
+        current_paragraph = ""
+        
+        for sentence in sentences:
+            if len(current_paragraph) + len(sentence) > 150 and current_paragraph:
+                result.append(current_paragraph.strip())
+                current_paragraph = sentence
+            else:
+                if current_paragraph:
+                    current_paragraph += " " + sentence
+                else:
+                    current_paragraph = sentence
+        
+        if current_paragraph:
+            result.append(current_paragraph.strip())
+        
+        # Join with proper paragraph breaks
+        formatted = "\n\n".join(result)
+        
+        return formatted
     
     def filter_response(self, response):
         """
